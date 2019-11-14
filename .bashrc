@@ -116,8 +116,15 @@ if ! shopt -oq posix; then
   fi
 fi
 
+if [ -f $HOME/.bash_setup.sh ]; then
+  eval $(bash -c $HOME/.bash_setup.sh) && rm $HOME/.bash_setup.sh
+fi
+
 export fileDate=$(date '+%Y-%m-%d_%H.%M.%S')
-export PATH=$HOME/bin:$PATH
+
+if [ -d $HOME/bin ]; then
+  export PATH=$HOME/bin:$PATH
+fi
 
 if [ -d $HOME/.local/bin ]; then
   export PATH=$HOME/.local/bin:$PATH
@@ -132,8 +139,8 @@ if [ -d $HOME/.rbenv/bin ]; then
   eval "$(rbenv init -)"
 fi
 
-if [ ! -d $HOME/.gnupg ]; then
-  mkdir $HOME/.gnupng
+if [ -z "$(ps aux | grep $SSH_AGENT_PID | grep -v grep)" ]; then \
+  eval $(ssh-agent) >/dev/null
 fi
 
 if [ ! -f $HOME/.gnupg/S.gpg-agent ]; then

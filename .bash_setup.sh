@@ -32,7 +32,7 @@ if [[ $USER = *"server" ]]; then
 
   if [ -z $steamcmd ]; then
     echo "This is a server account, please install steamcmd. If steamcmd is not required then ignore this message."
-    read -p "Do you want to install SteamCmd locally? [Y/y]" -n 1 -r
+    read -p "Do you want to install SteamCmd locally? [Yy/Nn]" -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
       mkdir $HOME/steamcmd
@@ -64,4 +64,54 @@ if [[ $USER = *"server" ]]; then
 
     ln -s $HOME/.steam/steamcmd/linux32 $HOME/steamcmd/linux32
   fi
+fi
+
+# Detect the .ssh directory and make it
+if [ ! -d $HOME/.ssh ]
+  mkdir $HOME/.ssh
+
+  echo "Setting up ssh-agent for the first time..."
+  eval $(ssh-agent) >/dev/null
+  kill $SSH_AGENT_PID
+  echo "Finished."
+fi
+
+if [ ! -d $HOME/.gnupg ]; then
+  mkdir $HOME/.gnupng
+
+  while true; do
+    read -p "Cache GnuPG key? [Yy/Nn] " yn
+
+    case $yn in
+      [Yy]*)
+        read -p "Cache the key for how long (milliseconds)? [default: 34560000] " cacheTime
+
+        if ! [[ $cacheTime =~ ^[0-9]+$ ]]; then
+          echo "Error: Not a number"
+        else
+          echo "allow-preset-passphrase\ndefault-cache-ttl ${cacheTime}\nmaximum-cache-ttl ${cacheTime}" > $HOME/.gnupg/gpg-agent.conf
+          exit
+        fi
+      ;;
+      [Nn]*)
+        echo "Ok."
+        exit
+      ;;
+      *)
+        echo "Please answer yes or no."
+      ;;
+    esac
+  done
+
+  echo "Setting up gpg-agent for the first time..."
+  gpg-connect-agent /bye 2> /dev/null
+  sleep 5
+  gpgconf --kill gpg-agent
+  echo "Finished."
+fi
+
+if [ ! -f $HOME/.nanorc ]; then
+  mkdir $HOME/.nano && mkdir $HOME/.nano/backups
+
+  echo -e "\#\# Back up files to the current filename plus a tilde.\nset backup\n\n\#\# Back up files to the current filename plus a tilde.\nset backupdir \"${HOME}/.nano/backups/\"\n" > $HOME/.nanorc
 fi
